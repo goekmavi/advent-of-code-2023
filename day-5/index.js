@@ -1,26 +1,5 @@
 const fs = require('fs');
 
-const getDestination = (number, map) => {
-    if (map[number]) {
-        return map[number];
-    } else {
-        return Number(number);
-    }
-}
-
-const createMap = arr => {
-    const map = {};
-    const tempArray = arr.split('\n').map(val => val.split(' ').map(val => Number(val)));
-    
-    tempArray.forEach(item => {
-        for (let i = 0; i < item[2]; i++) {
-            map[item[1] + i] = item[0] + i;
-        }
-    });
-
-    return map;
-}
-
 const solveSilber = (seeds, data) => {
     let lowestLocationNumber;
 
@@ -33,17 +12,17 @@ const solveSilber = (seeds, data) => {
         temperatureToHumidity,
         humidityToLocation
     ] = [
-        createMap(data[0]),
-        createMap(data[1]),
-        createMap(data[2]),
-        createMap(data[3]),
-        createMap(data[4]),
-        createMap(data[5]),
-        createMap(data[6])
+        data[0].split('\n').map(val => val.split(' ').map(val => Number(val))),
+        data[1].split('\n').map(val => val.split(' ').map(val => Number(val))),
+        data[2].split('\n').map(val => val.split(' ').map(val => Number(val))),
+        data[3].split('\n').map(val => val.split(' ').map(val => Number(val))),
+        data[4].split('\n').map(val => val.split(' ').map(val => Number(val))),
+        data[5].split('\n').map(val => val.split(' ').map(val => Number(val))),
+        data[6].split('\n').map(val => val.split(' ').map(val => Number(val)))
     ];
 
     seeds.forEach(seed => {
-        let result = seed;
+        let current = seed;
 
         [
             seedsToSoil,
@@ -53,16 +32,24 @@ const solveSilber = (seeds, data) => {
             lightToTemperature,
             temperatureToHumidity,
             humidityToLocation
-        ].forEach(map => {
-            result = getDestination(result, map);
+        ].forEach(valMap => {
+            let match = false;
+
+            for (let i = 0; i < valMap.length; i++) {
+                if (current >= valMap[i][1] && current < (valMap[i][1] + valMap[i][2])) {
+                    let destination = (current - valMap[i][1]) + valMap[i][0];
+                    current = destination;
+                    match = true;
+                    
+                    break;
+                }
+            }
         });
 
         if (lowestLocationNumber === undefined) {
-            lowestLocationNumber = result;
-        }
-
-        if (lowestLocationNumber > result) {
-            lowestLocationNumber = result;
+            lowestLocationNumber = current;
+        } else if (lowestLocationNumber > current) {
+            lowestLocationNumber = current;
         }
     });
 
@@ -73,7 +60,7 @@ try {
     const input = fs.readFileSync('input.txt', 'utf8');
     
     const data = input.split(/\n\s*\n/).map(val => val.split(':')[1].trim());
-    const seeds = data[0].trim().split(' ');
+    const seeds = data[0].trim().split(' ').map(val => Number(val));
     data.shift();
 
     console.log('Result a)', solveSilber(seeds, data));
