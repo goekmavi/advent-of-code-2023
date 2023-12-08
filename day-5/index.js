@@ -58,7 +58,7 @@ const solveGold = (seeds, data) => {
     return lowestLocationNumber;
 }
 
-const solveSilber = (seeds, data) => {
+const solveSilver = (seeds, data) => {
     let lowestLocationNumber;
 
     const [
@@ -121,7 +121,7 @@ try {
     const seeds = data[0].trim().split(' ').map(val => Number(val));
     data.shift();
 
-    console.log('Result a)', solveSilber(seeds, data));
+    console.log('Result a)', solveSilver(seeds, data));
     console.log('Result b)', solveGold(seeds, data));
 } catch (error) {
     console.log('Error:', error);

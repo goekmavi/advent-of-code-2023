@@ -324,7 +324,7 @@ const solveGold = input => {
     return sum;
 }
 
-const solveSilber = input => {
+const solveSilver = input => {
     const data = input.split('\n');
     const map = [];
     let sum = 0;
@@ -413,7 +413,7 @@ const solveSilber = input => {
 try {
     const input = fs.readFileSync('input.txt', 'utf8');
 
-    console.log('Result a)', solveSilber(input));
+    console.log('Result a)', solveSilver(input));
     console.log('Result b)', solveGold(input));
 } catch (error) {
     console.log('Error:', error);

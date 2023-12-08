@@ -20,7 +20,7 @@ const solveGold = input => {
     return possibleWays;
 }
 
-const solveSilber = input => {
+const solveSilver = input => {
     const data = input.split('\n').map(line => line.split(':')[1].trim().split(' ').filter(val => val !== '').map(val => Number(val)));
     
     let multiply = 1;
@@ -49,7 +49,7 @@ const solveSilber = input => {
 try {
     const input = fs.readFileSync('input.txt', 'utf8');
 
-    console.log('Result a)', solveSilber(input));
+    console.log('Result a)', solveSilver(input));
     console.log('Result b)', solveGold(input));
 } catch (error) {
     console.log('Error:', error);
