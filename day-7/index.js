@@ -1,3 +1,5 @@
+// https://adventofcode.com/2023/day/7
+
 const fs = require('fs');
 
 const types = Object.freeze({

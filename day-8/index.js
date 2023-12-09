@@ -1,3 +1,5 @@
+// https://adventofcode.com/2023/day/8
+
 const fs = require('fs');
 
 const calcGcd = (x, y) => {
