@@ -26,14 +26,24 @@ const isArrangement = (arrangementString, arrangementNumbers) => {
     }
 }
 
-const solveSilver = input => {
+const solve = (input, unfold) => {
     let sum = 0;
 
     const data = input.split('\n').map(line => line.split(' ').map((item, itemIndex) => {
         if (itemIndex === 1) {
-            return item.split(',').map(val => Number(val));
+            if (!unfold) {
+                return item.split(',').map(val => Number(val));
+            } else {
+                const tempString = (item + ',' + item + ',' + item + ',' + item + ',' + item);
+
+                return tempString.split(',').map(val => Number(val));
+            }
         } else {
-            return item;
+            if (!unfold) {
+                return item;
+            } else {
+                return item + '?' + item + '?' + item + '?' + item + '?' + item;
+            }
         }
     }));
 
@@ -47,7 +57,7 @@ const solveSilver = input => {
 try {
     const input = fs.readFileSync('input.txt', 'utf8');
 
-    console.log('Result a)', solveSilver(input));
+    console.log('Result a)', solve(input));
 } catch (error) {
     console.log('Error:', error);
 }
