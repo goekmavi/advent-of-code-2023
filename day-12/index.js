@@ -1,8 +1,14 @@
 const fs = require('fs');
 
-const isArrangement = (arrangementString, arrangementNumbers) => {
+const isArrangement = (arrangementString, arrangementNumbers, memoization) => {
+    if (memoization[arrangementString]) {
+        return memoization[arrangementString];
+    }
+
+    let returnValue = 0;
+
     if (arrangementString.match(/\?/)) {
-        return isArrangement(arrangementString.replace(/\?/, '.'), arrangementNumbers) + isArrangement(arrangementString.replace(/\?/, '#'), arrangementNumbers);
+        returnValue = isArrangement(arrangementString.replace(/\?/, '.'), arrangementNumbers, memoization) + isArrangement(arrangementString.replace(/\?/, '#'), arrangementNumbers, memoization);
     } else {
         matchArr = arrangementString.match(/\#+/g);
 
@@ -16,14 +22,18 @@ const isArrangement = (arrangementString, arrangementNumbers) => {
             });
 
             if (match) {
-                return 1;
+                returnValue = 1;
             } else {
-                return 0;
+                returnValue = 0;
             }
         } else {
-            return 0;
+            returnValue = 0;
         }
     }
+
+    memoization[arrangementString] = returnValue;
+
+    return returnValue;
 }
 
 const solve = (input, unfold) => {
@@ -48,7 +58,7 @@ const solve = (input, unfold) => {
     }));
 
     data.forEach(line => {
-        sum += isArrangement(line[0], line[1]);
+        sum += isArrangement(line[0], line[1], {});
     });
 
     return sum;
@@ -58,6 +68,7 @@ try {
     const input = fs.readFileSync('input.txt', 'utf8');
 
     console.log('Result a)', solve(input));
+    console.log('Result b)', solve(input, true));
 } catch (error) {
     console.log('Error:', error);
 }
