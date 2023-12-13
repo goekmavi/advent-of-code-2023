@@ -1,8 +1,8 @@
 const fs = require('fs');
 
 const isArrangement = (arrangementString, arrangementNumbers, memoization) => {    
-    if (memoization[arrangementString + ':' + arrangementNumbers]) {
-        return memoization[arrangementString + ':' + arrangementNumbers];
+    if (memoization.has(arrangementString + ':' + arrangementNumbers)) {
+        return memoization.get(arrangementString + ':' + arrangementNumbers);
     }
 
     let returnValue = 0;
@@ -58,7 +58,7 @@ const isArrangement = (arrangementString, arrangementNumbers, memoization) => {
         }
     }
 
-    memoization[arrangementString + ':' + arrangementNumbers] = returnValue;
+    memoization.set(arrangementString + ':' + arrangementNumbers, returnValue); 
 
     return returnValue;
 }
@@ -85,7 +85,8 @@ const solve = (input, unfold) => {
     }));
 
     data.forEach(line => {
-        sum += isArrangement(line[0], line[1], {});
+        const memoizationMap = new Map();
+        sum += isArrangement(line[0], line[1], memoizationMap);
     });
 
     return sum;
