@@ -1,37 +1,64 @@
 const fs = require('fs');
 
-const isArrangement = (arrangementString, arrangementNumbers, memoization) => {
-    if (memoization[arrangementString]) {
-        return memoization[arrangementString];
+const isArrangement = (arrangementString, arrangementNumbers, memoization) => {    
+    if (memoization[arrangementString + ':' + arrangementNumbers]) {
+        return memoization[arrangementString + ':' + arrangementNumbers];
     }
 
     let returnValue = 0;
 
-    if (arrangementString.match(/\?/)) {
-        returnValue = isArrangement(arrangementString.replace(/\?/, '.'), arrangementNumbers, memoization) + isArrangement(arrangementString.replace(/\?/, '#'), arrangementNumbers, memoization);
+    if (arrangementNumbers.length === 0) {
+        const match = arrangementString.match(/\#+/g);
+
+        if (match) {
+            returnValue = 0;
+        } else {
+            returnValue = 1;
+        }
+    } else if (arrangementString === '') {
+        returnValue = 0;
     } else {
-        matchArr = arrangementString.match(/\#+/g);
+        const firstChar = arrangementString[0];
 
-        if (matchArr && (matchArr.length === arrangementNumbers.length)) {
-            let match = true;
+        if (firstChar === '.') {
+            returnValue = isArrangement(arrangementString.substring(1), arrangementNumbers, memoization);
+        } else if (firstChar === '?') {
+            returnValue = isArrangement(arrangementString.replace(/\?/, '.'), arrangementNumbers, memoization) + isArrangement(arrangementString.replace(/\?/, '#'), arrangementNumbers, memoization);
+        } else if (firstChar === '#') {
+            let tempCond = true;
 
-            matchArr.forEach((item, itemIndex) => {
-                if (item.length !== arrangementNumbers[itemIndex]) {
-                    match = false;
+            if (arrangementString.length < arrangementNumbers[0]) {
+                tempCond = false;
+            } else {
+                for (let i = 0; i < arrangementNumbers[0]; i++) {
+                    if (arrangementString[i] === '.') {
+                        tempCond = false;
+                    }
                 }
-            });
 
-            if (match) {
-                returnValue = 1;
+                if ((arrangementString.length > arrangementNumbers[0]) && (arrangementString[arrangementNumbers[0]] === '#')) {
+                    tempCond = false;
+                }
+            }
+
+            if (tempCond) {
+                const tempNr = arrangementNumbers[0];
+                const newArrangementNumbers = [];
+
+                arrangementNumbers.forEach((item, itemIndex) => {
+                    if (itemIndex !== 0) {
+                        newArrangementNumbers.push(item);
+                    }
+                });
+
+                returnValue = isArrangement(arrangementString.substring(tempNr + 1), newArrangementNumbers, memoization);
             } else {
                 returnValue = 0;
             }
-        } else {
-            returnValue = 0;
         }
     }
 
-    memoization[arrangementString] = returnValue;
+    memoization[arrangementString + ':' + arrangementNumbers] = returnValue;
 
     return returnValue;
 }
