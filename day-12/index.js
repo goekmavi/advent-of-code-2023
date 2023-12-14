@@ -1,3 +1,5 @@
+// https://adventofcode.com/2023/day/12
+
 const fs = require('fs');
 
 const isArrangement = (arrangementString, arrangementNumbers, memoization) => {    

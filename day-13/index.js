@@ -1,3 +1,5 @@
+// https://adventofcode.com/2023/day/13
+
 const fs = require('fs');
 
 const findEdges = (pattern, isVertical, firstIndex, secondIndex) => {
