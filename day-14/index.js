@@ -129,20 +129,64 @@ const totalLoad = data => {
 }
 
 const solve = (input, cycleAmount = 0) => {
+    const cycle = 1000000000;
+
     let data = input.split('\n').map(line => line.split(''));
 
     if (cycleAmount === 0) {
         data = tiltNorth(data);
     } else {
-        for (let i = 1; i <= cycleAmount; i++) {
+        const indexMap = new Map();
+        const testArr = [];
+
+        for (let i = 0; i <= cycleAmount; i++) {
             data = tiltNorth(data);
             data = tiltWest(data);
             data = tiltSouth(data);
             data = tiltEast(data);
+
+            const dataAsString = data.toString();
+
+            if (!indexMap.has(dataAsString)) {
+                indexMap.set(dataAsString, [i]);
+            } else {
+                indexMap.set(dataAsString, [i, ...indexMap.get(dataAsString)]);
+            }
         }
+
+        indexMap.forEach(indexArr => {
+            if (indexArr.length > 1) {
+                const diffAmountMap = new Map();
+                
+                let amount = undefined;
+
+                for (let i = 0, j = i + 1; i < indexArr.length - 1; i++, j++) {
+                    if (!diffAmountMap.has(indexArr[i] - indexArr[j])) {
+                        diffAmountMap.set(indexArr[i] - indexArr[j], 1);
+                    } else {
+                        diffAmountMap.set(indexArr[i] - indexArr[j], diffAmountMap.get(indexArr[i] - indexArr[j]) + 1);
+                    }
+                }
+
+                diffAmountMap.forEach((val, key) => {
+                    amount = key; // diffAmountMap contains only one item, for my input: 34
+                });
+
+                testArr.push({
+                    amount: amount,
+                    array: indexArr
+                });
+            }
+        });
+
+        testArr.forEach(arr => {
+            // 9986 for 10000 cycles
+            if (((cycle - arr.array[0]) % arr.amount) === 0) {
+                console.log(arr.array[0]);
+            }
+        });
     }
-    
-    // console.log(data.map(chars => chars.join('')));
+
     return totalLoad(data);
 }
 
@@ -150,7 +194,7 @@ try {
     const input = fs.readFileSync('input.txt', 'utf8');
 
     console.log('Result a)', solve(input));
-    console.log('Result b)', solve(input, 3));
+    console.log('Result b)', solve(input, 9986)); // solve(9986) = 112433
 } catch (error) {
     console.log('Error:', error);
 }
