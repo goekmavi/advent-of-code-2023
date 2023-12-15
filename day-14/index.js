@@ -169,7 +169,7 @@ const solve = (input, cycleAmount = 0) => {
                 }
 
                 diffAmountMap.forEach((val, key) => {
-                    amount = key; // diffAmountMap contains only one item, for my input: 34
+                    amount = key; // diffAmountMap contains always only one item, for my input: 34
                 });
 
                 testArr.push({
@@ -180,9 +180,8 @@ const solve = (input, cycleAmount = 0) => {
         });
 
         testArr.forEach(arr => {
-            // 9986 for 10000 cycles
             if (((cycle - arr.array[0]) % arr.amount) === 0) {
-                console.log(arr.array[0]);
+                // console.log('->', arr.array[0]);
             }
         });
     }
@@ -194,7 +193,11 @@ try {
     const input = fs.readFileSync('input.txt', 'utf8');
 
     console.log('Result a)', solve(input));
-    console.log('Result b)', solve(input, 9986)); // solve(9986) = 112433
+
+    // solve(9986) = 112433 R: 0 (wrong)
+    // solve(9985) = 112452 R: 1
+    // solve(9987) = 112420 R: 33
+    console.log('Result b)', solve(input, 10000));
 } catch (error) {
     console.log('Error:', error);
 }
