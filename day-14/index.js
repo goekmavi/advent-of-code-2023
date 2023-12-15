@@ -129,7 +129,7 @@ const totalLoad = data => {
 }
 
 const solve = (input, cycleAmount = 0) => {
-    const cycle = 1000000000;
+    const cycle = 1000000000 - 1;
 
     let data = input.split('\n').map(line => line.split(''));
 
@@ -181,7 +181,7 @@ const solve = (input, cycleAmount = 0) => {
 
         testArr.forEach(arr => {
             if (((cycle - arr.array[0]) % arr.amount) === 0) {
-                // console.log('->', arr.array[0]);
+                console.log('->', arr.array[0]); // solve(10000) = 9985
             }
         });
     }
@@ -194,10 +194,8 @@ try {
 
     console.log('Result a)', solve(input));
 
-    // solve(9986) = 112433 R: 0 (wrong)
-    // solve(9985) = 112452 R: 1
-    // solve(9987) = 112420 R: 33
-    console.log('Result b)', solve(input, 10000));
+    // solve(9985) = 112452 R: 0
+    console.log('Result b)', solve(input, 9985));
 } catch (error) {
     console.log('Error:', error);
 }
