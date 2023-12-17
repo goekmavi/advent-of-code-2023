@@ -1,3 +1,5 @@
+// https://adventofcode.com/2023/day/16
+
 const fs = require('fs');
 
 const solve = (data, startObj) => {
