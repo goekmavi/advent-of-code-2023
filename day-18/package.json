@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "area-polygon": "^1.0.1",
     "point-in-polygon": "^1.1.0"
   }
 }
