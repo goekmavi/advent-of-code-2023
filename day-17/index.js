@@ -9,6 +9,20 @@ const directions = Object.freeze({
     'fromBottomToTop': 3
 });
 
+const printDirection = matrix => {
+    let currentPos = {
+        i: matrix.length - 1,
+        j: matrix[0].length - 1
+    }
+
+    while (currentPos.i !== 0 && currentPos.j !== 0) {
+        console.log(matrix[currentPos.i][currentPos.j]);
+        currentPos = matrix[currentPos.i][currentPos.j].predecessor[0];
+    }
+
+    console.log(matrix[0][0]);
+}
+
 const solve = matrix => {
     const pos = {
         i: 0,
@@ -20,44 +34,54 @@ const solve = matrix => {
         j: matrix[0].length - 1
     }
 
-    const stack = [];
+    let stack = new Map();
 
     let visitedAll = false;
 
     matrix[pos.i][pos.j].weight = 0;
-    matrix[pos.i][pos.j].direction = directions.fromLeftToRight;
+    matrix[pos.i][pos.j].direction = undefined;
     matrix[pos.i][pos.j].predecessor = {
         i: 0,
         j: 0
     }
 
-    stack.push(matrix[pos.i][pos.j]);
+    stack.set(pos.i.toString() + ',' + pos.j.toString(), matrix[pos.i][pos.j].weight);
 
-    while (!visitedAll) {
-        pos.i = stack[0].i;
-        pos.j = stack[0].j;
-        pos.direction = stack[0].direction;
+    while (!visitedAll) {    
+        stack = new Map([...stack.entries()].sort((a, b) => a[1] - b[1])); // sort
 
-        if (pos.direction === directions.fromLeftToRight) {
+        const firstItemsOfStack = stack.entries().next().value[0].split(',');
+
+        pos.i = Number(firstItemsOfStack[0]);
+        pos.j = Number(firstItemsOfStack[1]);
+        pos.direction = matrix[pos.i][pos.j].direction;
+
+        stack.delete(stack.keys().next().value);
+
+        if (pos.direction === undefined) { // for start point
             let weights = 0;
             let predecessors = [];
 
-            for (let steps = 1; steps <= 3; steps++) { // top
-                if (matrix[pos.i - steps] && matrix[pos.i - steps][pos.j] && !matrix[pos.i - steps][pos.j].visited) {
-                    weights += matrix[pos.i - steps][pos.j].value;
+            for (let steps = 1; steps <= 3; steps++) { // right
+                if (matrix[pos.i][pos.j + steps] && !matrix[pos.i][pos.j + steps].visited) {
+                    weights += matrix[pos.i][pos.j + steps].value;
+
+                    let tempPredecessorsArr = [];
 
                     predecessors.push({
-                        i: matrix[pos.i][pos.j].i,
-                        j: matrix[pos.i][pos.j].j
-                    })
+                        i: pos.i,
+                        j: pos.j + (steps - 1)
+                    });
 
-                    if (matrix[pos.i - steps][pos.j].weight === undefined || (matrix[pos.i][pos.j].weight + weights) < matrix[pos.i - steps][pos.j].weight) {
-                        matrix[pos.i - steps][pos.j].weight = matrix[pos.i][pos.j].weight + weights;
-                        matrix[pos.i - steps][pos.j].predecessor = predecessors;
+                    predecessors.forEach(item => tempPredecessorsArr.push(item));
+
+                    if (matrix[pos.i][pos.j + steps].weight === undefined || (matrix[pos.i][pos.j].weight + weights) < matrix[pos.i][pos.j + steps].weight) {
+                        matrix[pos.i][pos.j + steps].weight = matrix[pos.i][pos.j].weight + weights;
+                        matrix[pos.i][pos.j + steps].predecessor = tempPredecessorsArr;
+                        matrix[pos.i][pos.j + steps].direction = directions.fromLeftToRight;
+
+                        stack.set(pos.i.toString() + ',' + (pos.j + steps).toString(), matrix[pos.i][pos.j + steps].weight);
                     }
-
-                    matrix[pos.i - steps][pos.j].direction = directions.fromBottomToTop;
-                    stack.push(matrix[pos.i - steps][pos.j]);
                 } else {
                     break;
                 }
@@ -70,23 +94,27 @@ const solve = matrix => {
                 if (matrix[pos.i + steps] && matrix[pos.i + steps][pos.j] && !matrix[pos.i + steps][pos.j].visited) {
                     weights += matrix[pos.i + steps][pos.j].value;
 
+                    let tempPredecessorsArr = [];
+
                     predecessors.push({
-                        i: matrix[pos.i][pos.j].i,
-                        j: matrix[pos.i][pos.j].j
-                    })
+                        i: pos.i + (steps - 1),
+                        j: pos.j
+                    });
+
+                    predecessors.forEach(item => tempPredecessorsArr.push(item));
 
                     if (matrix[pos.i + steps][pos.j].weight === undefined || (matrix[pos.i][pos.j].weight + weights) < matrix[pos.i + steps][pos.j].weight) {
                         matrix[pos.i + steps][pos.j].weight = matrix[pos.i][pos.j].weight + weights;
-                        matrix[pos.i + steps][pos.j].predecessor = predecessors;
-                    }
+                        matrix[pos.i + steps][pos.j].predecessor = tempPredecessorsArr;
+                        matrix[pos.i + steps][pos.j].direction = directions.fromTopToBottom;
 
-                    matrix[pos.i + steps][pos.j].direction = directions.fromTopToBottom;
-                    stack.push(matrix[pos.i + steps][pos.j]);
+                        stack.set((pos.i + steps).toString() + ',' + pos.j.toString(), matrix[pos.i + steps][pos.j].weight);
+                    }
                 } else {
                     break;
                 }
             }
-        } else if (pos.direction === directions.fromRightToLeft) {
+        } else if (pos.direction === directions.fromLeftToRight || pos.direction === directions.fromRightToLeft) {
             let weights = 0;
             let predecessors = [];
 
@@ -94,18 +122,22 @@ const solve = matrix => {
                 if (matrix[pos.i - steps] && matrix[pos.i - steps][pos.j] && !matrix[pos.i - steps][pos.j].visited) {
                     weights += matrix[pos.i - steps][pos.j].value;
 
+                    let tempPredecessorsArr = [];
+
                     predecessors.push({
-                        i: matrix[pos.i][pos.j].i,
-                        j: matrix[pos.i][pos.j].j
-                    })
+                        i: pos.i - (steps - 1),
+                        j: pos.j
+                    });
+
+                    predecessors.forEach(item => tempPredecessorsArr.push(item));
 
                     if (matrix[pos.i - steps][pos.j].weight === undefined || (matrix[pos.i][pos.j].weight + weights) < matrix[pos.i - steps][pos.j].weight) {
                         matrix[pos.i - steps][pos.j].weight = matrix[pos.i][pos.j].weight + weights;
-                        matrix[pos.i - steps][pos.j].predecessor = predecessors;
-                    }
+                        matrix[pos.i - steps][pos.j].predecessor = tempPredecessorsArr;
+                        matrix[pos.i - steps][pos.j].direction = directions.fromBottomToTop;
 
-                    matrix[pos.i - steps][pos.j].direction = directions.fromBottomToTop;
-                    stack.push(matrix[pos.i - steps][pos.j]);
+                        stack.set((pos.i - steps).toString() + ',' + pos.j.toString(), matrix[pos.i - steps][pos.j].weight);
+                    }
                 } else {
                     break;
                 }
@@ -118,42 +150,50 @@ const solve = matrix => {
                 if (matrix[pos.i + steps] && matrix[pos.i + steps][pos.j] && !matrix[pos.i + steps][pos.j].visited) {
                     weights += matrix[pos.i + steps][pos.j].value;
 
+                    let tempPredecessorsArr = [];
+
                     predecessors.push({
-                        i: matrix[pos.i][pos.j].i,
-                        j: matrix[pos.i][pos.j].j
-                    })
+                        i: pos.i + (steps - 1),
+                        j: pos.j
+                    });
+
+                    predecessors.forEach(item => tempPredecessorsArr.push(item));
 
                     if (matrix[pos.i + steps][pos.j].weight === undefined || (matrix[pos.i][pos.j].weight + weights) < matrix[pos.i + steps][pos.j].weight) {
                         matrix[pos.i + steps][pos.j].weight = matrix[pos.i][pos.j].weight + weights;
-                        matrix[pos.i + steps][pos.j].predecessor = predecessors;
-                    }
+                        matrix[pos.i + steps][pos.j].predecessor = tempPredecessorsArr;
+                        matrix[pos.i + steps][pos.j].direction = directions.fromTopToBottom;
 
-                    matrix[pos.i + steps][pos.j].direction = directions.fromTopToBottom;
-                    stack.push(matrix[pos.i + steps][pos.j]);
+                        stack.set((pos.i + steps).toString() + ',' + pos.j.toString(), matrix[pos.i + steps][pos.j].weight);
+                    }
                 } else {
                     break;
                 }
             }
-        } else if (pos.direction === directions.fromTopToBottom) {
-            weights = 0;
-            predecessors = [];
+        } else if (pos.direction === directions.fromTopToBottom || pos.direction === directions.fromBottomToTop) {
+            let weights = 0;
+            let predecessors = [];
 
             for (let steps = 1; steps <= 3; steps++) { // right
                 if (matrix[pos.i][pos.j + steps] && !matrix[pos.i][pos.j + steps].visited) {
                     weights += matrix[pos.i][pos.j + steps].value;
 
+                    let tempPredecessorsArr = [];
+
                     predecessors.push({
-                        i: matrix[pos.i][pos.j].i,
-                        j: matrix[pos.i][pos.j].j
-                    })
+                        i: pos.i,
+                        j: pos.j + (steps - 1)
+                    });
+
+                    predecessors.forEach(item => tempPredecessorsArr.push(item));
 
                     if (matrix[pos.i][pos.j + steps].weight === undefined || (matrix[pos.i][pos.j].weight + weights) < matrix[pos.i][pos.j + steps].weight) {
                         matrix[pos.i][pos.j + steps].weight = matrix[pos.i][pos.j].weight + weights;
-                        matrix[pos.i][pos.j + steps].predecessor = predecessors;
-                    }
+                        matrix[pos.i][pos.j + steps].predecessor = tempPredecessorsArr;
+                        matrix[pos.i][pos.j + steps].direction = directions.fromLeftToRight;
 
-                    matrix[pos.i][pos.j + steps].direction = directions.fromLeftToRight;
-                    stack.push(matrix[pos.i][pos.j + steps]);
+                        stack.set(pos.i.toString() + ',' + (pos.j + steps).toString(), matrix[pos.i][pos.j + steps].weight);
+                    }
                 } else {
                     break;
                 }
@@ -166,66 +206,22 @@ const solve = matrix => {
                 if (matrix[pos.i][pos.j - steps] && !matrix[pos.i][pos.j - steps].visited) {
                     weights += matrix[pos.i][pos.j - steps].value;
 
+                    let tempPredecessorsArr = [];
+
                     predecessors.push({
-                        i: matrix[pos.i][pos.j].i,
-                        j: matrix[pos.i][pos.j].j
-                    })
+                        i: pos.i,
+                        j: pos.j - (steps - 1)
+                    });
+
+                    predecessors.forEach(item => tempPredecessorsArr.push(item));
 
                     if (matrix[pos.i][pos.j - steps].weight === undefined || (matrix[pos.i][pos.j].weight + weights) < matrix[pos.i][pos.j - steps].weight) {
                         matrix[pos.i][pos.j - steps].weight = matrix[pos.i][pos.j].weight + weights;
-                        matrix[pos.i][pos.j - steps].predecessor = predecessors;
+                        matrix[pos.i][pos.j - steps].predecessor = tempPredecessorsArr;
+                        matrix[pos.i][pos.j - steps].direction = directions.fromRightToLeft;
+
+                        stack.set(pos.i.toString() + ',' + (pos.j - steps).toString(), matrix[pos.i][pos.j - steps].weight);
                     }
-
-                    matrix[pos.i][pos.j - steps].direction = directions.fromRightToLeft;
-                    stack.push(matrix[pos.i][pos.j - steps]);
-                } else {
-                    break;
-                }
-            }
-        } else if (pos.direction === directions.fromBottomToTop) {
-            weights = 0;
-            predecessors = [];
-
-            for (let steps = 1; steps <= 3; steps++) { // right
-                if (matrix[pos.i][pos.j + steps] && !matrix[pos.i][pos.j + steps].visited) {
-                    weights += matrix[pos.i][pos.j + steps].value;
-
-                    predecessors.push({
-                        i: matrix[pos.i][pos.j].i,
-                        j: matrix[pos.i][pos.j].j
-                    })
-
-                    if (matrix[pos.i][pos.j + steps].weight === undefined || (matrix[pos.i][pos.j].weight + weights) < matrix[pos.i][pos.j + steps].weight) {
-                        matrix[pos.i][pos.j + steps].weight = matrix[pos.i][pos.j].weight + weights;
-                        matrix[pos.i][pos.j + steps].predecessor = predecessors;
-                    }
-
-                    matrix[pos.i][pos.j + steps].direction = directions.fromLeftToRight;
-                    stack.push(matrix[pos.i][pos.j + steps]);
-                } else {
-                    break;
-                }
-            }
-
-            weights = 0;
-            predecessors = [];
-
-            for (let steps = 1; steps <= 3; steps++) { // left
-                if (matrix[pos.i][pos.j - steps] && !matrix[pos.i][pos.j - steps].visited) {
-                    weights += matrix[pos.i][pos.j - steps].value;
-
-                    predecessors.push({
-                        i: matrix[pos.i][pos.j].i,
-                        j: matrix[pos.i][pos.j].j
-                    })
-
-                    if (matrix[pos.i][pos.j - steps].weight === undefined || (matrix[pos.i][pos.j].weight + weights) < matrix[pos.i][pos.j - steps].weight) {
-                        matrix[pos.i][pos.j - steps].weight = matrix[pos.i][pos.j].weight + weights;
-                        matrix[pos.i][pos.j - steps].predecessor = predecessors;
-                    }
-
-                    matrix[pos.i][pos.j - steps].direction = directions.fromRightToLeft;
-                    stack.push(matrix[pos.i][pos.j - steps]);
                 } else {
                     break;
                 }
@@ -233,15 +229,13 @@ const solve = matrix => {
         }
 
         matrix[pos.i][pos.j].visited = true;
-        stack.shift();
 
-        if (stack.length === 0) {
+        if (stack.size === 0) {
             visitedAll = true;
         }
     }
 
-    console.log(matrix[matrix.length - 1][matrix[0].length - 1]);
-    //console.log(stack);
+    printDirection(matrix);
 }
 
 try {
