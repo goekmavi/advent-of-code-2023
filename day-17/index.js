@@ -10,30 +10,18 @@ const directions = Object.freeze({
     'start': 4
 });
 
-const printDirection = matrix => {
-    let currentPos = {
-        i: matrix.length - 1,
-        j: matrix[0].length - 1
-    }
-
-    while (currentPos.i !== 0 || currentPos.j !== 0) {
-        console.log(matrix[currentPos.i][currentPos.j]);
-
-        currentPos = {
-            i: matrix[currentPos.i][currentPos.j].predecessors.i,
-            j: matrix[currentPos.i][currentPos.j].predecessors.j
-        };
-    }
-
-    console.log(matrix[0][0]);
-}
+const directionEntry = Object.freeze({
+    'top': 0,
+    'right': 1,
+    'bottom': 2,
+    'left': 3
+});
 
 const solve = matrix => {
     const pos = {
         i: 0,
         j: 0,
-        direction: directions.start,
-        predecessor: [0, 0]
+        direction: directions.start
     }
 
     const desination = {
@@ -44,24 +32,19 @@ const solve = matrix => {
     let stack = new Map();
     let visitedAll = false;
 
-    matrix[pos.i][pos.j].weight = 0;
+    matrix[pos.i][pos.j].weightsPosArr[directionEntry.left] = 0;
+    matrix[pos.i][pos.j].weightsPosArr[directionEntry.top] = 0;
 
-    stack.set(pos.i.toString() + ',' + pos.j.toString() + ':' + pos.direction + ':' + pos.predecessor, matrix[pos.i][pos.j].weight);
+    stack.set(pos.i.toString() + ',' + pos.j.toString() + ':' + pos.direction, 0);
 
     while (!visitedAll) {    
         stack = new Map([...stack.entries()].sort((a, b) => a[1] - b[1])); // sort
-
-        console.log(stack);
 
         const firstItemsOfStack = stack.entries().next().value[0].split(':').map(val => val.split(','));
 
         pos.i = Number(firstItemsOfStack[0][0]);
         pos.j = Number(firstItemsOfStack[0][1]);
         pos.direction = Number(firstItemsOfStack[1][0]);
-        pos.predecessor = {
-            i: Number(firstItemsOfStack[2].toString().split(',')[0]),
-            j: Number(firstItemsOfStack[2].toString().split(',')[1])
-        };
 
         stack.delete(stack.keys().next().value);
 
@@ -72,21 +55,8 @@ const solve = matrix => {
                 if (matrix[pos.i][pos.j + steps]) {
                     weights += matrix[pos.i][pos.j + steps].value;
 
-                    if (matrix[pos.i][pos.j + steps].weight === undefined || (matrix[pos.i][pos.j].weight + weights) < matrix[pos.i][pos.j + steps].weight) {
-                        let tempStackItems = [...stack.entries()].filter(item => item[0].includes((pos.i) + ',' + (pos.j + steps) + ':'));
-                        
-                        if (tempStackItems.length > 0) {
-                            if (tempStackItems[0][1] > matrix[pos.i][pos.j].weight + weights) {
-                                stack.delete(tempStackItems[0][0]); // delete old value
-
-                                matrix[pos.i][pos.j + steps].weight = matrix[pos.i][pos.j].weight + weights;
-                                stack.set(pos.i.toString() + ',' + (pos.j + steps).toString() + ':' + directions.fromLeftToRight + ':' + [pos.i, pos.j], matrix[pos.i][pos.j + steps].weight);
-                            }
-                        } else {
-                            matrix[pos.i][pos.j + steps].weight = matrix[pos.i][pos.j].weight + weights;
-                            stack.set(pos.i.toString() + ',' + (pos.j + steps).toString() + ':' + directions.fromLeftToRight + ':' + [pos.i, pos.j], matrix[pos.i][pos.j + steps].weight);
-                        }
-                    }
+                    matrix[pos.i][pos.j + steps].weightsPosArr[directionEntry.left] = 0 + weights;
+                    stack.set(pos.i.toString() + ',' + (pos.j + steps).toString() + ':' + directions.fromLeftToRight, matrix[pos.i][pos.j + steps].weightsPosArr[directionEntry.left]);
                 } else {
                     break;
                 }
@@ -98,46 +68,31 @@ const solve = matrix => {
                 if (matrix[pos.i + steps] && matrix[pos.i + steps][pos.j]) {
                     weights += matrix[pos.i + steps][pos.j].value;
 
-                    if (matrix[pos.i + steps][pos.j].weight === undefined || (matrix[pos.i][pos.j].weight + weights) < matrix[pos.i + steps][pos.j].weight) {
-                        let tempStackItems = [...stack.entries()].filter(item => item[0].includes((pos.i + steps) + ',' + (pos.j) + ':'));
-                        
-                        if (tempStackItems.length > 0) {
-                            if (tempStackItems[0][1] > matrix[pos.i][pos.j].weight + weights) {
-                                stack.delete(tempStackItems[0][0]); // delete old value
-
-                                matrix[pos.i + steps][pos.j].weight = matrix[pos.i][pos.j].weight + weights;
-                                stack.set((pos.i + steps).toString() + ',' + pos.j.toString() + ':' + directions.fromTopToBottom + ':' + [pos.i, pos.j], matrix[pos.i + steps][pos.j].weight);
-                            }
-                        } else {
-                            matrix[pos.i + steps][pos.j].weight = matrix[pos.i][pos.j].weight + weights;
-                            stack.set((pos.i + steps).toString() + ',' + pos.j.toString() + ':' + directions.fromTopToBottom + ':' + [pos.i, pos.j], matrix[pos.i + steps][pos.j].weight);
-                        }
-                    }
+                    matrix[pos.i + steps][pos.j].weightsPosArr[directionEntry.top] = 0 + weights;
+                    stack.set((pos.i + steps).toString() + ',' + pos.j.toString() + ':' + directions.fromTopToBottom, matrix[pos.i + steps][pos.j].weightsPosArr[directionEntry.top]);
                 } else {
                     break;
                 }
             }
         } else if (pos.direction === directions.fromLeftToRight || pos.direction === directions.fromRightToLeft) {
             let weights = 0;
+            let currentMinWeight;
+
+            if (matrix[pos.i][pos.j].weightsPosArr[directionEntry.left] !== undefined && matrix[pos.i][pos.j].weightsPosArr[directionEntry.right] !== undefined) {
+                currentMinWeight = Math.min(matrix[pos.i][pos.j].weightsPosArr[directionEntry.left], matrix[pos.i][pos.j].weightsPosArr[directionEntry.right]);
+            } else if (matrix[pos.i][pos.j].weightsPosArr[directionEntry.left] !== undefined ) {
+                currentMinWeight = matrix[pos.i][pos.j].weightsPosArr[directionEntry.left];
+            } else if (matrix[pos.i][pos.j].weightsPosArr[directionEntry.right] !== undefined ) {
+                currentMinWeight = matrix[pos.i][pos.j].weightsPosArr[directionEntry.right];
+            }
 
             for (let steps = 1; steps <= 3; steps++) { // top
                 if (matrix[pos.i - steps] && matrix[pos.i - steps][pos.j]) {
                     weights += matrix[pos.i - steps][pos.j].value;
 
-                    if (matrix[pos.i - steps][pos.j].weight === undefined || (matrix[pos.i][pos.j].weight + weights) < matrix[pos.i - steps][pos.j].weight) {
-                        let tempStackItems = [...stack.entries()].filter(item => item[0].includes((pos.i - steps) + ',' + (pos.j) + ':'));
-                        
-                        if (tempStackItems.length > 0) {
-                            if (tempStackItems[0][1] > matrix[pos.i][pos.j].weight + weights) {
-                                stack.delete(tempStackItems[0][0]); // delete old value
-
-                                matrix[pos.i - steps][pos.j].weight = matrix[pos.i][pos.j].weight + weights;
-                                stack.set((pos.i - steps).toString() + ',' + pos.j.toString() + ':' + directions.fromBottomToTop + ':' + [pos.i, pos.j], matrix[pos.i - steps][pos.j].weight);
-                            }
-                        } else {
-                            matrix[pos.i - steps][pos.j].weight = matrix[pos.i][pos.j].weight + weights;
-                            stack.set((pos.i - steps).toString() + ',' + pos.j.toString() + ':' + directions.fromBottomToTop + ':' + [pos.i, pos.j], matrix[pos.i - steps][pos.j].weight);
-                        }
+                    if (matrix[pos.i - steps][pos.j].weightsPosArr[directionEntry.bottom] === undefined || (currentMinWeight + weights) < matrix[pos.i - steps][pos.j].weightsPosArr[directionEntry.bottom] ) {
+                        matrix[pos.i - steps][pos.j].weightsPosArr[directionEntry.bottom] = currentMinWeight + weights;
+                        stack.set((pos.i - steps).toString() + ',' + pos.j.toString() + ':' + directions.fromBottomToTop, matrix[pos.i - steps][pos.j].weightsPosArr[directionEntry.bottom]);
                     }
                 } else {
                     break;
@@ -150,20 +105,9 @@ const solve = matrix => {
                 if (matrix[pos.i + steps] && matrix[pos.i + steps][pos.j]) {
                     weights += matrix[pos.i + steps][pos.j].value;
 
-                    if (matrix[pos.i + steps][pos.j].weight === undefined || (matrix[pos.i][pos.j].weight + weights) < matrix[pos.i + steps][pos.j].weight) {
-                        let tempStackItems = [...stack.entries()].filter(item => item[0].includes((pos.i + steps) + ',' + (pos.j) + ':'));
-                        
-                        if (tempStackItems.length > 0) {
-                            if (tempStackItems[0][1] > matrix[pos.i][pos.j].weight + weights) {
-                                stack.delete(tempStackItems[0][0]); // delete old value
-
-                                matrix[pos.i + steps][pos.j].weight = matrix[pos.i][pos.j].weight + weights;
-                                stack.set((pos.i + steps).toString() + ',' + pos.j.toString() + ':' + directions.fromTopToBottom + ':' + [pos.i, pos.j], matrix[pos.i + steps][pos.j].weight);
-                            }
-                        } else {
-                            matrix[pos.i + steps][pos.j].weight = matrix[pos.i][pos.j].weight + weights;
-                            stack.set((pos.i + steps).toString() + ',' + pos.j.toString() + ':' + directions.fromTopToBottom + ':' + [pos.i, pos.j], matrix[pos.i + steps][pos.j].weight);
-                        }
+                    if (matrix[pos.i + steps][pos.j].weightsPosArr[directionEntry.top] === undefined || (currentMinWeight + weights) < matrix[pos.i + steps][pos.j].weightsPosArr[directionEntry.top] ) {
+                        matrix[pos.i + steps][pos.j].weightsPosArr[directionEntry.top] = currentMinWeight + weights;
+                        stack.set((pos.i + steps).toString() + ',' + pos.j.toString() + ':' + directions.fromTopToBottom, matrix[pos.i + steps][pos.j].weightsPosArr[directionEntry.top] );
                     }
                 } else {
                     break;
@@ -171,25 +115,23 @@ const solve = matrix => {
             }
         } else if (pos.direction === directions.fromTopToBottom || pos.direction === directions.fromBottomToTop) {
             let weights = 0;
+            let currentMinWeight;
+
+            if (matrix[pos.i][pos.j].weightsPosArr[directionEntry.top] !== undefined && matrix[pos.i][pos.j].weightsPosArr[directionEntry.bottom] !== undefined) {
+                currentMinWeight = Math.min(matrix[pos.i][pos.j].weightsPosArr[directionEntry.top], matrix[pos.i][pos.j].weightsPosArr[directionEntry.bottom]);
+            } else if (matrix[pos.i][pos.j].weightsPosArr[directionEntry.top] !== undefined ) {
+                currentMinWeight = matrix[pos.i][pos.j].weightsPosArr[directionEntry.top];
+            } else if (matrix[pos.i][pos.j].weightsPosArr[directionEntry.bottom] !== undefined ) {
+                currentMinWeight = matrix[pos.i][pos.j].weightsPosArr[directionEntry.bottom];
+            }
 
             for (let steps = 1; steps <= 3; steps++) { // right
                 if (matrix[pos.i][pos.j + steps]) {
                     weights += matrix[pos.i][pos.j + steps].value;
 
-                    if (matrix[pos.i][pos.j + steps].weight === undefined || (matrix[pos.i][pos.j].weight + weights) < matrix[pos.i][pos.j + steps].weight) {
-                        let tempStackItems = [...stack.entries()].filter(item => item[0].includes((pos.i) + ',' + (pos.j + steps) + ':'));
-                        
-                        if (tempStackItems.length > 0) {
-                            if (tempStackItems[0][1] > matrix[pos.i][pos.j].weight + weights) {
-                                stack.delete(tempStackItems[0][0]); // delete old value
-
-                                matrix[pos.i][pos.j + steps].weight = matrix[pos.i][pos.j].weight + weights;
-                                stack.set(pos.i.toString() + ',' + (pos.j + steps).toString() + ':' + directions.fromLeftToRight + ':' + [pos.i, pos.j], matrix[pos.i][pos.j + steps].weight);
-                            }
-                        } else {
-                            matrix[pos.i][pos.j + steps].weight = matrix[pos.i][pos.j].weight + weights;
-                            stack.set(pos.i.toString() + ',' + (pos.j + steps).toString() + ':' + directions.fromLeftToRight + ':' + [pos.i, pos.j], matrix[pos.i][pos.j + steps].weight);
-                        }                    
+                    if (matrix[pos.i][pos.j + steps].weightsPosArr[directionEntry.left] === undefined || (currentMinWeight + weights) < matrix[pos.i][pos.j + steps].weightsPosArr[directionEntry.left]) {
+                        matrix[pos.i][pos.j + steps].weightsPosArr[directionEntry.left] = currentMinWeight + weights;
+                        stack.set(pos.i.toString() + ',' + (pos.j + steps).toString() + ':' + directions.fromLeftToRight, matrix[pos.i][pos.j + steps].weightsPosArr[directionEntry.left]);                  
                     }
                 } else {
                     break;
@@ -202,20 +144,9 @@ const solve = matrix => {
                 if (matrix[pos.i][pos.j - steps]) {
                     weights += matrix[pos.i][pos.j - steps].value;
 
-                    if (matrix[pos.i][pos.j - steps].weight === undefined || (matrix[pos.i][pos.j].weight + weights) < matrix[pos.i][pos.j - steps].weight) {
-                        let tempStackItems = [...stack.entries()].filter(item => item[0].includes((pos.i) + ',' + (pos.j - steps) + ':'));
-                        
-                        if (tempStackItems.length > 0) {
-                            if (tempStackItems[0][1] > matrix[pos.i][pos.j].weight + weights) {
-                                stack.delete(tempStackItems[0][0]); // delete old value
-
-                                matrix[pos.i][pos.j - steps].weight = matrix[pos.i][pos.j].weight + weights;
-                                stack.set(pos.i.toString() + ',' + (pos.j - steps).toString() + ':' + directions.fromRightToLeft + ':' + [pos.i, pos.j], matrix[pos.i][pos.j - steps].weight);
-                            }
-                        } else {
-                            matrix[pos.i][pos.j - steps].weight = matrix[pos.i][pos.j].weight + weights;
-                            stack.set(pos.i.toString() + ',' + (pos.j - steps).toString() + ':' + directions.fromRightToLeft + ':' + [pos.i, pos.j], matrix[pos.i][pos.j - steps].weight);
-                        }
+                    if (matrix[pos.i][pos.j - steps].weightsPosArr[directionEntry.right] === undefined || (currentMinWeight + weights) < matrix[pos.i][pos.j - steps].weightsPosArr[directionEntry.right]) {
+                        matrix[pos.i][pos.j - steps].weightsPosArr[directionEntry.right] = currentMinWeight + weights;
+                        stack.set(pos.i.toString() + ',' + (pos.j - steps).toString() + ':' + directions.fromRightToLeft, matrix[pos.i][pos.j - steps].weightsPosArr[directionEntry.right]);
                     }
                 } else {
                     break;
@@ -223,17 +154,22 @@ const solve = matrix => {
             }
         }
 
-        pos.predecessor['direction'] = pos.direction;
-        matrix[pos.i][pos.j].predecessors = pos.predecessor;
-
         if (stack.size === 0) {
             visitedAll = true;
         }
     }
 
-    printDirection(matrix);
-    console.log('----');
-    console.log(matrix[matrix.length - 1][matrix[0].length - 1]);
+    const finalItemArr = matrix[matrix.length - 1][matrix[0].length - 1].weightsPosArr;
+
+    let finalWeight;
+
+    for (let i = 0; i < finalItemArr.length; i++) {
+        if (finalWeight === undefined || finalWeight > finalItemArr[i]) {
+            finalWeight = finalItemArr[i];
+        }
+    }
+    
+    return finalWeight;
 }
 
 try {
@@ -241,8 +177,7 @@ try {
     const data = input.split('\n').map((line, lineIndex) => line.split('').map((char, charIndex) => {
         return {
             value: Number(char),
-            weight: undefined,
-            predecessors: [],
+            weightsPosArr: [undefined, undefined, undefined, undefined],
             i: lineIndex,
             j: charIndex
         }
