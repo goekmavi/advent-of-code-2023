@@ -17,16 +17,11 @@ const directionEntry = Object.freeze({
     'left': 3
 });
 
-const solve = matrix => {
+const solve = (matrix, minSteps, maxSteps) => {
     const pos = {
         i: 0,
         j: 0,
         direction: directions.start
-    }
-
-    const desination = {
-        i: matrix.length - 1,
-        j: matrix[0].length - 1
     }
 
     let stack = new Map();
@@ -51,12 +46,14 @@ const solve = matrix => {
         if (pos.direction === directions.start) { // for start point
             let weights = 0;
 
-            for (let steps = 1; steps <= 3; steps++) { // right
+            for (let steps = 1; steps <= maxSteps; steps++) { // right
                 if (matrix[pos.i][pos.j + steps]) {
                     weights += matrix[pos.i][pos.j + steps].value;
 
-                    matrix[pos.i][pos.j + steps].weightsPosArr[directionEntry.left] = 0 + weights;
-                    stack.set(pos.i.toString() + ',' + (pos.j + steps).toString() + ':' + directions.fromLeftToRight, matrix[pos.i][pos.j + steps].weightsPosArr[directionEntry.left]);
+                    if (steps >= minSteps) {
+                        matrix[pos.i][pos.j + steps].weightsPosArr[directionEntry.left] = 0 + weights;
+                        stack.set(pos.i.toString() + ',' + (pos.j + steps).toString() + ':' + directions.fromLeftToRight, matrix[pos.i][pos.j + steps].weightsPosArr[directionEntry.left]);
+                    }
                 } else {
                     break;
                 }
@@ -64,12 +61,14 @@ const solve = matrix => {
 
             weights = 0;
 
-            for (let steps = 1; steps <= 3; steps++) { // bottom
+            for (let steps = 1; steps <= maxSteps; steps++) { // bottom
                 if (matrix[pos.i + steps] && matrix[pos.i + steps][pos.j]) {
                     weights += matrix[pos.i + steps][pos.j].value;
 
-                    matrix[pos.i + steps][pos.j].weightsPosArr[directionEntry.top] = 0 + weights;
-                    stack.set((pos.i + steps).toString() + ',' + pos.j.toString() + ':' + directions.fromTopToBottom, matrix[pos.i + steps][pos.j].weightsPosArr[directionEntry.top]);
+                    if (steps >= minSteps) {
+                        matrix[pos.i + steps][pos.j].weightsPosArr[directionEntry.top] = 0 + weights;
+                        stack.set((pos.i + steps).toString() + ',' + pos.j.toString() + ':' + directions.fromTopToBottom, matrix[pos.i + steps][pos.j].weightsPosArr[directionEntry.top]);   
+                    }
                 } else {
                     break;
                 }
@@ -86,13 +85,15 @@ const solve = matrix => {
                 currentMinWeight = matrix[pos.i][pos.j].weightsPosArr[directionEntry.right];
             }
 
-            for (let steps = 1; steps <= 3; steps++) { // top
+            for (let steps = 1; steps <= maxSteps; steps++) { // top
                 if (matrix[pos.i - steps] && matrix[pos.i - steps][pos.j]) {
                     weights += matrix[pos.i - steps][pos.j].value;
 
-                    if (matrix[pos.i - steps][pos.j].weightsPosArr[directionEntry.bottom] === undefined || (currentMinWeight + weights) < matrix[pos.i - steps][pos.j].weightsPosArr[directionEntry.bottom] ) {
-                        matrix[pos.i - steps][pos.j].weightsPosArr[directionEntry.bottom] = currentMinWeight + weights;
-                        stack.set((pos.i - steps).toString() + ',' + pos.j.toString() + ':' + directions.fromBottomToTop, matrix[pos.i - steps][pos.j].weightsPosArr[directionEntry.bottom]);
+                    if (steps >= minSteps) {
+                        if (matrix[pos.i - steps][pos.j].weightsPosArr[directionEntry.bottom] === undefined || (currentMinWeight + weights) < matrix[pos.i - steps][pos.j].weightsPosArr[directionEntry.bottom] ) {
+                            matrix[pos.i - steps][pos.j].weightsPosArr[directionEntry.bottom] = currentMinWeight + weights;
+                            stack.set((pos.i - steps).toString() + ',' + pos.j.toString() + ':' + directions.fromBottomToTop, matrix[pos.i - steps][pos.j].weightsPosArr[directionEntry.bottom]);
+                        }
                     }
                 } else {
                     break;
@@ -101,13 +102,15 @@ const solve = matrix => {
 
             weights = 0;
 
-            for (let steps = 1; steps <= 3; steps++) { // bottom
+            for (let steps = 1; steps <= maxSteps; steps++) { // bottom
                 if (matrix[pos.i + steps] && matrix[pos.i + steps][pos.j]) {
                     weights += matrix[pos.i + steps][pos.j].value;
 
-                    if (matrix[pos.i + steps][pos.j].weightsPosArr[directionEntry.top] === undefined || (currentMinWeight + weights) < matrix[pos.i + steps][pos.j].weightsPosArr[directionEntry.top] ) {
-                        matrix[pos.i + steps][pos.j].weightsPosArr[directionEntry.top] = currentMinWeight + weights;
-                        stack.set((pos.i + steps).toString() + ',' + pos.j.toString() + ':' + directions.fromTopToBottom, matrix[pos.i + steps][pos.j].weightsPosArr[directionEntry.top] );
+                    if (steps >= minSteps) {
+                        if (matrix[pos.i + steps][pos.j].weightsPosArr[directionEntry.top] === undefined || (currentMinWeight + weights) < matrix[pos.i + steps][pos.j].weightsPosArr[directionEntry.top] ) {
+                            matrix[pos.i + steps][pos.j].weightsPosArr[directionEntry.top] = currentMinWeight + weights;
+                            stack.set((pos.i + steps).toString() + ',' + pos.j.toString() + ':' + directions.fromTopToBottom, matrix[pos.i + steps][pos.j].weightsPosArr[directionEntry.top] );
+                        }
                     }
                 } else {
                     break;
@@ -125,13 +128,15 @@ const solve = matrix => {
                 currentMinWeight = matrix[pos.i][pos.j].weightsPosArr[directionEntry.bottom];
             }
 
-            for (let steps = 1; steps <= 3; steps++) { // right
+            for (let steps = 1; steps <= maxSteps; steps++) { // right
                 if (matrix[pos.i][pos.j + steps]) {
                     weights += matrix[pos.i][pos.j + steps].value;
 
-                    if (matrix[pos.i][pos.j + steps].weightsPosArr[directionEntry.left] === undefined || (currentMinWeight + weights) < matrix[pos.i][pos.j + steps].weightsPosArr[directionEntry.left]) {
-                        matrix[pos.i][pos.j + steps].weightsPosArr[directionEntry.left] = currentMinWeight + weights;
-                        stack.set(pos.i.toString() + ',' + (pos.j + steps).toString() + ':' + directions.fromLeftToRight, matrix[pos.i][pos.j + steps].weightsPosArr[directionEntry.left]);                  
+                    if (steps >= minSteps) {
+                        if (matrix[pos.i][pos.j + steps].weightsPosArr[directionEntry.left] === undefined || (currentMinWeight + weights) < matrix[pos.i][pos.j + steps].weightsPosArr[directionEntry.left]) {
+                            matrix[pos.i][pos.j + steps].weightsPosArr[directionEntry.left] = currentMinWeight + weights;
+                            stack.set(pos.i.toString() + ',' + (pos.j + steps).toString() + ':' + directions.fromLeftToRight, matrix[pos.i][pos.j + steps].weightsPosArr[directionEntry.left]);                  
+                        }
                     }
                 } else {
                     break;
@@ -140,13 +145,15 @@ const solve = matrix => {
 
             weights = 0;
 
-            for (let steps = 1; steps <= 3; steps++) { // left
+            for (let steps = 1; steps <= maxSteps; steps++) { // left
                 if (matrix[pos.i][pos.j - steps]) {
                     weights += matrix[pos.i][pos.j - steps].value;
 
-                    if (matrix[pos.i][pos.j - steps].weightsPosArr[directionEntry.right] === undefined || (currentMinWeight + weights) < matrix[pos.i][pos.j - steps].weightsPosArr[directionEntry.right]) {
-                        matrix[pos.i][pos.j - steps].weightsPosArr[directionEntry.right] = currentMinWeight + weights;
-                        stack.set(pos.i.toString() + ',' + (pos.j - steps).toString() + ':' + directions.fromRightToLeft, matrix[pos.i][pos.j - steps].weightsPosArr[directionEntry.right]);
+                    if (steps >= minSteps) {
+                        if (matrix[pos.i][pos.j - steps].weightsPosArr[directionEntry.right] === undefined || (currentMinWeight + weights) < matrix[pos.i][pos.j - steps].weightsPosArr[directionEntry.right]) {
+                            matrix[pos.i][pos.j - steps].weightsPosArr[directionEntry.right] = currentMinWeight + weights;
+                            stack.set(pos.i.toString() + ',' + (pos.j - steps).toString() + ':' + directions.fromRightToLeft, matrix[pos.i][pos.j - steps].weightsPosArr[directionEntry.right]);
+                        }
                     }
                 } else {
                     break;
@@ -174,7 +181,15 @@ const solve = matrix => {
 
 try {
     const input = fs.readFileSync('input.txt', 'utf8');
-    const data = input.split('\n').map((line, lineIndex) => line.split('').map((char, charIndex) => {
+    const dataPartA = input.split('\n').map((line, lineIndex) => line.split('').map((char, charIndex) => {
+        return {
+            value: Number(char),
+            weightsPosArr: [undefined, undefined, undefined, undefined],
+            i: lineIndex,
+            j: charIndex
+        }
+    }));
+    const dataPartB = input.split('\n').map((line, lineIndex) => line.split('').map((char, charIndex) => {
         return {
             value: Number(char),
             weightsPosArr: [undefined, undefined, undefined, undefined],
@@ -183,8 +198,8 @@ try {
         }
     }));
     
-    console.log('Result a)', solve(data));
-    //console.log('Result b)', solveGold(data));
+    console.log('Result a)', solve(dataPartA, 1, 3));
+    console.log('Result b)', solve(dataPartB, 4, 10));
 } catch(error) {
     console.log('Error:', error);
 }
