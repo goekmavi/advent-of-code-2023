@@ -27,6 +27,8 @@ const pressButton = (map, amount, stopModule) => {
     for (let i = 0; i < amount; i++) {
         const stack = [];
 
+        let stopModuleCounter = 0;
+
         totalLowPulses++; // button -low-> broadcaster
 
         // console.log('button - low -> broadcaster');
@@ -45,6 +47,10 @@ const pressButton = (map, amount, stopModule) => {
                 totalLowPulses++;
             } else if (currentModulePulse === 'high') {
                 totalHighPulses++;
+            }
+
+            if (stopModule !== undefined && currentModuleName === stopModule) {
+                stopModuleCounter++;
             }
 
             // console.log(currentModuleSender, '-', currentModulePulse, '->', currentModuleName);
@@ -93,6 +99,11 @@ const pressButton = (map, amount, stopModule) => {
         }
 
         // console.log('------------------');
+
+        if (stopModule !== undefined && stopModuleCounter === 1) {
+            console.log('Done!', stopModuleCounter, i);
+            return i;
+        }
     }
 
     return totalHighPulses * totalLowPulses;
@@ -138,8 +149,8 @@ const solve = (input, amount, stopModule) => {
 try {
     const input = fs.readFileSync('input.txt', 'utf8');
 
-    console.log('Result a)', solve(input, 1000));
-    //console.log('Result b)', solve(input, Number.MAX_VALUE, 'rx'));
+    // console.log('Result a)', solve(input, 1000));
+    console.log('Result b)', solve(input, Number.MAX_VALUE, 'rx'));
 } catch(error) {
     console.log('Error:', error);
 }
